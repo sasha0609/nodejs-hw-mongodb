@@ -20,6 +20,8 @@ export const setupServer = () => {
     }),
   );
 
+  console.log(`Environment PORT: ${PORT}`);
+
   app.get('/contacts', async (req, res) => {
     try {
       const contacts = await getAllContacts();
@@ -60,8 +62,6 @@ export const setupServer = () => {
       message: 'Not Found!(',
     });
   });
-
-  console.log(`Environment PORT: ${PORT}`);
 
   app.listen(PORT, () => {
     console.log(`Server is running on ${PORT}`);
