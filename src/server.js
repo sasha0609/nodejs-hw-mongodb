@@ -47,7 +47,10 @@ export const setupServer = () => {
       });
     } catch (error) {
       console.error(error);
-      res.status(500).send('Internal Server Error');
+      res.status(404).json({
+        status: 404,
+        message: 'Contact not found',
+      });
     }
   });
 
