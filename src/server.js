@@ -39,21 +39,17 @@ export const setupServer = () => {
   app.get('/contacts/:contactId', async (req, res) => {
     try {
       const { contactId } = req.params;
-      console.log({ contactId });
       const contact = await getContactById(contactId);
-      console.log(contact);
       res.status(200).json({
         status: 200,
         message: `Successfully found contact with id ${contactId}!`,
         data: contact,
       });
     } catch (error) {
-      console.error(error);
       res.status(404).json({
         status: 404,
         message: 'Contact not found',
       });
-      console.log('NONONO NOT AGAIN');
     }
   });
 
