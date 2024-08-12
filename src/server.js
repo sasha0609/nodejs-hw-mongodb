@@ -29,7 +29,7 @@ export const setupServer = () => {
   app.use(contactsRouters);
   app.use('*', notFoundHandler);
   app.use(errorHandler);
-
+  
   app.listen(PORT, () => {
     console.log(`Server is running on ${PORT}`);
   });
