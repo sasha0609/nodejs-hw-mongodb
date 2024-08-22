@@ -1,9 +1,20 @@
+import path from 'node:path';
+import fs from 'node:fs/promises';
 import bcrypt from 'bcrypt';
 import crypto from 'node:crypto';
+import jwt from 'jsonwebtoken';
+import handlebars from 'handlebars';
 import createHttpError from 'http-errors';
-import { ACCESS_TOKEN_TTL, REFRESH_TOKEN_TTL } from '../constants/index.js';
+import { env } from '../env.js';
+import {
+  ACCESS_TOKEN_TTL,
+  REFRESH_TOKEN_TTL,
+  SMTP,
+  TEMPLATES_DIR,
+} from '../constants/index.js';
 import { SessionCollection } from '../models/session.js';
 import { UsersCollection } from '../models/user.js';
+import { sendMail } from '../utils/sendMail.js';
 
 export const registerUser = async (payload) => {
   const user = await UsersCollection.findOne({
@@ -37,7 +48,8 @@ export const loginUser = async (payload) => {
 
   if (!user) throw createHttpError(404, 'User not found ');
 
-  const isEqual = bcrypt.compare(payload.password, user.password);
+  const isEqual = await bcrypt.compare(payload.password, user.password);
+  //
 
   if (!isEqual) {
     throw createHttpError(401, 'Unauthorized');
@@ -77,4 +89,68 @@ export const refreshUsersSession = async ({ sessionId, refreshToken }) => {
     userId: session.userId,
     ...newSession,
   });
+};
+
+export const requestResetToken = async (email) => {
+  const user = await UsersCollection.findOne({ email });
+  if (!user) {
+    throw createHttpError(404, 'User not found');
+  }
+
+  const resetToken = jwt.sign(
+    {
+      sub: user._id,
+      email: user.email,
+    },
+    process.env.JWT_SECRET,
+    { expiresIn: '15m' },
+  );
+  if (!process.env.JWT_SECRET) {
+    throw new Error('JWT_SECRET is not defined at requestResetToken');
+  }
+  const templateFile = path.join(TEMPLATES_DIR, 'reset-password-email.html');
+
+  const templateSource = await fs.readFile(templateFile, { encoding: 'utf-8' });
+
+  const template = handlebars.compile(templateSource);
+
+  const html = template({
+    name: user.name,
+    link: `${env('APP_DOMAIN')}/reset-password?token=${resetToken}`,
+  });
+
+  sendMail({
+    from: SMTP.SMTP_FROM,
+    to: email,
+    subject: 'Reset your password',
+    html,
+  });
+};
+
+export const resetPassword = async (password, token) => {
+  let entries;
+  try {
+    entries = jwt.verify(token, process.env.JWT_SECRET);
+  } catch (err) {
+    if (!process.env.JWT_SECRET) {
+      throw new Error('JWT_SECRET is not defined at resetPassword');
+    }
+  }
+
+  const user = await UsersCollection.findOne({
+    _id: entries.sub,
+    email: entries.email,
+  });
+
+  if (!user) {
+    throw createHttpError(404, 'User not found ');
+  }
+
+  const hashedPassword = await bcrypt.hash(password, 10);
+
+  await UsersCollection.updateOne(
+    { _id: user._id },
+    { password: hashedPassword },
+  );
+  await SessionCollection.deleteMany({ userId: user._id });
 };

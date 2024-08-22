@@ -8,6 +8,9 @@ import {
 import createHttpError from 'http-errors';
 import { parsePaginationParams } from '../utils/parsePaginationParams.js';
 import { parseSortParams } from '../utils/parseSortParams.js';
+import { saveFileToUploadDir } from '../utils/saveFileToUploadDir.js';
+import { env } from '../env.js';
+import { saveFileToCloudinary } from '../utils/saveFileToCloudinary.js';
 
 export const getContactsController = async (req, res) => {
   const { page, perPage } = parsePaginationParams(req.query);
@@ -47,11 +50,25 @@ export const getContactByIdController = async (req, res) => {
 export const createContactController = async (req, res) => {
   const { phoneNumber, name } = req.body;
   const userId = req.user._id;
+  const photo = req.file;
+
+  let photoUrl;
+  if (photo) {
+    if (env('ENABLE_CLOUDINARY') === 'true') {
+      photoUrl = await saveFileToCloudinary(photo);
+    } else {
+      photoUrl = await saveFileToUploadDir(photo);
+    }
+  }
   if (!phoneNumber || !name) {
     throw createHttpError(400, 'phoneNumber and name are required');
   }
 
-  const contact = await createContact({ ...req.body, userId });
+  const contact = await createContact({
+    ...req.body,
+    userId,
+    photo: photoUrl,
+  });
 
   res.json({
     status: 201,
@@ -64,8 +81,21 @@ export const patchContactController = async (req, res, next) => {
   try {
     const { contactId } = req.params;
     const userId = req.user._id;
+    const photo = req.file;
 
-    const result = await updateContact(contactId, userId, req.body);
+    let photoUrl;
+    if (photo) {
+      if (env('ENABLE_CLOUDINARY') === 'true') {
+        photoUrl = await saveFileToCloudinary(photo);
+      } else {
+        photoUrl = await saveFileToUploadDir(photo);
+      }
+    }
+
+    const result = await updateContact(contactId, userId, {
+      ...req.body,
+      photo: photoUrl,
+    });
 
     if (!result) {
       throw createHttpError(404, 'Contact not found');
