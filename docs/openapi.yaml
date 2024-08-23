@@ -12,8 +12,8 @@ tags:
   - name: Auth
     description: Auth operations.
 servers:
+  - url: https://nodejs-hw-mongodb-hw7-mnda.onrender.com
   - url: http://localhost:3000
-  # - url: #посилання на задеплоєний сайт
 paths:
   /contacts:
     get:
