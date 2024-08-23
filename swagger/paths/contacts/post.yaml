@@ -1,0 +1,61 @@
+tags:
+  - Contacts
+summary: Create contact
+operationId: createContacts
+description: 'Create contact with this endpoint'
+security:
+  - bearerAuth: []
+requestBody:
+  content:
+    application/json:
+      schema:
+        type: object
+        required:
+          - name
+          - phoneNumber
+          - email
+          - contactType
+        properties:
+          name:
+            description: "Contact's name"
+            type: string
+            example: 'John Doe'
+          phoneNumber:
+            description: "Contact's phone number"
+            type: string
+            example: '+380000000000'
+          email:
+            description: "Contact's email"
+            type: string
+            example: 'email@gmail.com'
+          contactType:
+            description: "Contact's type"
+            type: string
+            enum: ['work', 'home', 'personal']
+            example: personal
+            default: personal
+responses:
+  '201':
+    description: Create contact
+    content:
+      application/json:
+        schema:
+          type: object
+          required:
+            - status
+            - message
+            - data
+          properties:
+            status:
+              type: integer
+              example: 201
+            message:
+              type: string
+              example: 'Successfully created contact'
+            data:
+              type: object
+              $ref: ../../components/schemas/contacts.yaml
+  '401':
+    $ref: ../../components/responses/401.yaml
+  '404':
+    $ref: ../../components/responses/404.yaml
