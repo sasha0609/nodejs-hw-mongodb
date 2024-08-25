@@ -13,8 +13,6 @@ requestBody:
         required:
           - name
           - phoneNumber
-          - email
-          - contactType
         properties:
           name:
             description: "Contact's name"
@@ -34,6 +32,15 @@ requestBody:
             enum: ['work', 'home', 'personal']
             example: personal
             default: personal
+          isFavourite:
+            description: "Contact's email"
+            type: string
+            example: 'email@gmail.com'
+          photo:
+            description: "Contact's photo"
+            type: string
+            format: binary
+            example: 'https://res.cloudinary'
 responses:
   '201':
     description: Create contact

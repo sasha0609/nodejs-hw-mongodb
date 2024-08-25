@@ -177,9 +177,7 @@
                 "type": "object",
                 "required": [
                   "name",
-                  "phoneNumber",
-                  "email",
-                  "contactType"
+                  "phoneNumber"
                 ],
                 "properties": {
                   "name": {
@@ -207,6 +205,17 @@
                     ],
                     "example": "personal",
                     "default": "personal"
+                  },
+                  "isFavourite": {
+                    "description": "Contact's email",
+                    "type": "string",
+                    "example": "email@gmail.com"
+                  },
+                  "photo": {
+                    "description": "Contact's photo",
+                    "type": "string",
+                    "format": "binary",
+                    "example": "https://res.cloudinary"
                   }
                 }
               }
